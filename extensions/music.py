@@ -89,8 +89,9 @@ class MusicCog(commands.Cog):
         if voice_client.is_playing() and query is None:
             return await ui.ErrMsg.already_playing(interaction)
 
-        # Get the guild's player
+# Get the guild's player
         player = data.guild_data(interaction.guild_id).player
+        player.announce_channel = interaction.channel   # ← THIS LINE, 8 spaces before it
 
         # Check queue if no query is provided
         if query is None:

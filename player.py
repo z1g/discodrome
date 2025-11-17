@@ -23,6 +23,7 @@ class Player():
     def __init__(self) -> None:
         self._data = _default_data  
         self._player_loop = None
+        self.announce_channel: discord.TextChannel | None = None
 
     @property
     def current_song(self) -> Song:
@@ -70,13 +71,13 @@ class Player():
 
         # Make sure the voice client is available and connected
         if voice_client is None:
-            await ui.ErrMsg.bot_not_in_voice_channel(interaction)
+            await ui.ErrMsg.bot_not_in_voice_channel(self.announce_channel)
             return
         
         # Check if the voice client is still connected
         if not voice_client.is_connected():
             logger.error("Voice client is not connected")
-            await ui.ErrMsg.msg(interaction, "Voice connection was lost. Please try again.")
+            await ui.ErrMsg.msg(self.announce_channel, "Voice connection was lost. Please try again.")
             return
 
         # Make sure the bot isn't already playing music
@@ -225,7 +226,7 @@ class Player():
             # Pop the first item from the queue and stream the track
             song = self.queue.pop(0)
             self.current_song = song
-            await ui.SysMsg.now_playing(interaction, song)
+            await ui.SysMsg.now_playing(self.announce_channel, song)
             await self.stream_track(interaction, song, voice_client)
         else:
             logger.debug("Queue is empty.")
@@ -240,7 +241,7 @@ class Player():
                 await self.play_audio_queue(interaction, voice_client)
                 return
             # If the queue is empty, playback has ended; we should let the user know
-            await ui.SysMsg.playback_ended(interaction)
+            await ui.SysMsg.playback_ended(self.announce_channel)
 
 
     async def skip_track(self, interaction: discord.Interaction, voice_client: discord.VoiceClient) -> None:
@@ -254,6 +255,8 @@ class Player():
         # Check if the bot is already playing something
         if voice_client.is_playing():
             voice_client.stop()
-            await ui.SysMsg.skipping(interaction)
+            await ui.SysMsg.skipping(self.announce_channel)
         else:
-            await ui.ErrMsg.not_playing(interaction)
+            await ui.ErrMsg.not_playing(self.announce_channel)
+
+
